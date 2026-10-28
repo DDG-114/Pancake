@@ -1,0 +1,17 @@
+group,model,value
+Load,DLinear,0.810
+Load,PatchTST,0.750
+Load,CALF,0.730
+Load,Proposed,0.670
+Wind,DLinear,0.790
+Wind,PatchTST,0.730
+Wind,CALF,0.710
+Wind,Proposed,0.640
+PV,DLinear,0.950
+PV,PatchTST,0.880
+PV,CALF,0.850
+PV,Proposed,0.800
+Net load,DLinear,0.830
+Net load,PatchTST,0.760
+Net load,CALF,0.740
+Net load,Proposed,0.680

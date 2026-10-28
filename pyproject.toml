@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "radialbundle"
+version = "0.2.0"
+description = "Grouped radial comparison plots with bundled branches and Matplotlib styling"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["matplotlib>=3.5", "numpy>=1.21"]
+
+[project.urls]
+Repository = "https://github.com/DDG-114/Pancake"
+
+[project.scripts]
+radialbundle = "radialbundle.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
