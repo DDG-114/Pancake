@@ -16,6 +16,10 @@ import numpy as np
 
 PALETTE = ("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
            "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf")
+PALETTES = {
+    "reference": ("#E64B35", "#4DBBD5", "#00A087", "#3C5488"),
+    "reference_right": ("#7E2F8E", "#238EBA", "#00A087", "#D99A00"),
+}
 
 
 @dataclass(frozen=True)
@@ -38,7 +42,7 @@ class Style:
     branch_alpha: float = 0.6
     start_angle: float = 90
     group_label_angle: float = 0.355
-    star_color: str = "#D4A72C"
+    star_color: str = "#F2CA69"
 
 
 def _xy(radius, angle):
@@ -112,7 +116,7 @@ def _validate_style(style):
 
 
 def plot(data, *, highlight=None, lower_is_better=True, value_format=".3f",
-         scale=None, colors=None, model_order=None, background=None, title=None,
+         scale=None, colors="reference", model_order=None, background=None, title=None,
          style=None, ax=None, legend=True, highlight_label=None, best_label="Best"):
     """Draw one disk and return ``(figure, axes)``.
 
@@ -121,6 +125,8 @@ def plot(data, *, highlight=None, lower_is_better=True, value_format=".3f",
     A single linear scale is used across the disk. Stars identify all exact ties
     for the best observed value within each group; the outline is independent.
     ``scale`` is drawing units per data unit, not per-group normalization.
+    ``colors`` accepts a named palette (reference, reference_right, matplotlib),
+    a group/color mapping, or a color sequence. None follows Matplotlib's cycle.
     """
     data, models = _prepare(data, model_order, highlight)
     style = Style() if style is None else style
@@ -136,8 +142,13 @@ def plot(data, *, highlight=None, lower_is_better=True, value_format=".3f",
     except (ValueError, TypeError) as error:
         raise ValueError("value_format must be a valid Python numeric format, e.g. '.3f'") from error
     groups = list(data)
-    if colors is None:
+    if colors is None or (isinstance(colors, str) and colors == "matplotlib"):
         cycle = mpl.rcParams["axes.prop_cycle"].by_key().get("color", PALETTE)
+        palette = [cycle[i % len(cycle)] for i in range(len(groups))]
+    elif isinstance(colors, str):
+        if colors not in PALETTES:
+            raise ValueError(f"unknown palette {colors!r}; choose reference, reference_right, or matplotlib")
+        cycle = PALETTES[colors]
         palette = [cycle[i % len(cycle)] for i in range(len(groups))]
     elif isinstance(colors, Mapping):
         if any(group not in colors for group in groups):
@@ -269,11 +280,12 @@ def plot(data, *, highlight=None, lower_is_better=True, value_format=".3f",
     return fig, ax
 
 
-def plot_panels(panels, *, ncols=2, share_scale=False, **kwargs):
+def plot_panels(panels, *, ncols=2, share_scale=False, panel_colors=None, **kwargs):
     """Draw named disks in a grid, returning ``(figure, 2D_axes_array)``.
 
     ``share_scale=True`` gives all panels the same units-to-length conversion.
     Otherwise each panel automatically scales to its own maximum.
+    ``panel_colors`` optionally maps panel names to palettes or custom colors.
     """
     if not isinstance(panels, Mapping) or not panels:
         raise ValueError("panels must be a nonempty title/data mapping")
@@ -281,6 +293,9 @@ def plot_panels(panels, *, ncols=2, share_scale=False, **kwargs):
         raise ValueError("ncols must be a positive integer")
     if "ax" in kwargs:
         raise ValueError("plot_panels creates its own axes")
+    if panel_colors is not None:
+        if not isinstance(panel_colors, Mapping) or any(name not in panels for name in panel_colors):
+            raise ValueError("panel_colors must map existing panel names to palettes or colors")
     ncols = min(ncols, len(panels))
     nrows = math.ceil(len(panels) / ncols)
     if share_scale and kwargs.get("scale") is None:
@@ -294,6 +309,8 @@ def plot_panels(panels, *, ncols=2, share_scale=False, **kwargs):
     fig.subplots_adjust(left=.04, right=.96, bottom=.04, top=.91, wspace=.12, hspace=.3)
     for ax, (name, data) in zip(axes.flat, panels.items()):
         options = dict(kwargs)
+        if panel_colors is not None and name in panel_colors:
+            options["colors"] = panel_colors[name]
         options.setdefault("title", str(name))
         plot(data, ax=ax, **options)
     for ax in list(axes.flat)[len(panels):]:

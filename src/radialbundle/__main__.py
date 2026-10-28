@@ -15,6 +15,7 @@ def main(argv=None):
     parser.add_argument("--panel", help="select one panel; by default draw all panels")
     parser.add_argument("--highlight", help="model to outline, e.g. Proposed")
     parser.add_argument("--background", default=None)
+    parser.add_argument("--palette", choices=["reference", "reference_right", "matplotlib"], default="reference")
     parser.add_argument("--decimals", type=int, default=3)
     parser.add_argument("--higher-is-better", action="store_true")
     parser.add_argument("--share-scale", action="store_true", help="same length scale across panels")
@@ -31,7 +32,7 @@ def main(argv=None):
             if args.panel not in panels:
                 raise ValueError(f"panel {args.panel!r} not found; available: {list(panels)}")
             panels = {args.panel: panels[args.panel]}
-        options = dict(highlight=args.highlight, background=args.background,
+        options = dict(highlight=args.highlight, background=args.background, colors=args.palette,
                        lower_is_better=not args.higher_is_better,
                        value_format=f".{args.decimals}f",
                        style=Style(label_size=args.label_size, font_family=args.font))

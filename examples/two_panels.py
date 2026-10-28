@@ -1,4 +1,4 @@
-"""Two Matplotlib-style panels. All values are synthetic, not research results."""
+"""Reference palettes with Matplotlib fonts. All values are synthetic."""
 
 from pathlib import Path
 
@@ -16,16 +16,19 @@ def main():
         for group, values in DATA.items()
     }
     panels = {"Dataset A": DATA, "Dataset B": data_b}
-    fig, _ = plot_panels(
-        panels,
-        share_scale=True,
-        highlight="Proposed",
-        best_label="Best in group",
-        value_format=".3f",
-    )
-    save(fig, out / "two_panels")
-    print(out / "two_panels.png")
-    plt.close(fig)
+    for background, suffix in [("white", ""), ("#c8c8c8", "_gray")]:
+        fig, _ = plot_panels(
+            panels,
+            share_scale=True,
+            panel_colors={"Dataset A": "reference", "Dataset B": "reference_right"},
+            highlight="Proposed",
+            best_label="Best in group",
+            value_format=".3f",
+            background=background,
+        )
+        save(fig, out / f"two_panels{suffix}")
+        print(out / f"two_panels{suffix}.png")
+        plt.close(fig)
 
 
 if __name__ == "__main__":

@@ -69,7 +69,7 @@ class PlotTests(unittest.TestCase):
         self.assertIs(result_ax, ax)
         self.assertEqual(before, {key: repr(matplotlib.rcParams[key]) for key in keys})
 
-    def test_defaults_follow_matplotlib_font_and_color_context(self):
+    def test_matplotlib_palette_and_font_follow_context(self):
         data = {
             "Load": {"Baseline": 1.0, "Proposed": 0.8},
             "Wind": {"Baseline": 1.2, "Proposed": 0.9},
@@ -81,7 +81,7 @@ class PlotTests(unittest.TestCase):
             "font.family": ["DejaVu Sans Mono"],
             "axes.prop_cycle": plt.cycler(color=colors),
         }):
-            _, ax = plot(data, legend=False)
+            _, ax = plot(data, colors="matplotlib", legend=False)
             for group, color in zip(data, colors):
                 bar = next(a for a in ax.get_children()
                            if a.get_gid() == f"bar:{group}:Baseline")
@@ -93,6 +93,22 @@ class PlotTests(unittest.TestCase):
                 self.assertEqual(label.get_fontweight(), "normal")
         self.assertEqual(matplotlib.rcParams["font.family"], before_font)
         self.assertEqual(matplotlib.rcParams["axes.prop_cycle"].by_key()["color"], before_colors)
+
+    def test_reference_palettes_and_per_panel_selection(self):
+        data = {group: {"Proposed": value} for group, value in
+                zip(["Load", "Wind", "PV", "Net load"], [1, 2, 3, 4])}
+        expected = ["#E64B35", "#4DBBD5", "#00A087", "#3C5488"]
+        _, ax = plot(data, legend=False)
+        for group, color in zip(data, expected):
+            bar = next(a for a in ax.get_children() if a.get_gid() == f"bar:{group}:Proposed")
+            self.assertEqual(matplotlib.colors.to_hex(bar.get_color()), color.lower())
+        _, axes = plot_panels({"Left": data, "Right": data}, legend=False,
+                              panel_colors={"Right": "reference_right"})
+        right_bar = next(a for a in axes[0, 1].get_children()
+                         if a.get_gid() == "bar:Load:Proposed")
+        self.assertEqual(matplotlib.colors.to_hex(right_bar.get_color()), "#7e2f8e")
+        with self.assertRaises(ValueError):
+            plot(data, colors="not-a-palette")
 
     def test_invalid_metrics_scales_and_names_fail_before_plotting(self):
         for value in [-1.0, math.inf, -math.inf, math.nan]:

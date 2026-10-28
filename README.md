@@ -2,7 +2,7 @@
 
 用 Matplotlib 画分组径向比较图：中心细曲线汇聚，外圈柱条标注模型和数值，黑框强调指定方法，金星标出各组最优值。
 
-默认采用 Matplotlib 的颜色周期、无衬线字体和白底，支持 Python 字典、CSV、并列多图，以及 PNG、PDF、SVG 导出。Python 模块名为 **`radialbundle`**。
+默认采用参考图中的珊瑚红、青蓝、青绿和深蓝，字体保持 Matplotlib 的无衬线风格，背景默认白色。支持 Python 字典、CSV、并列多图，以及 PNG、PDF、SVG 导出。Python 模块名为 **`radialbundle`**。
 
 ![四任务径向图示例，数值为虚构数据](docs/images/preview.png)
 
@@ -88,6 +88,7 @@ fig, axes = plot_panels(
     panels,
     ncols=2,
     share_scale=True,
+    panel_colors={"Dataset A": "reference", "Dataset B": "reference_right"},
     highlight="Proposed",
     value_format=".3f",
 )
@@ -100,14 +101,23 @@ save(fig, "two_datasets")
 
 ## Matplotlib 风格和自定义样式
 
-默认配色跟随 `axes.prop_cycle`，字体跟随 `font.family`，背景跟随 `figure.facecolor`，因此也可以使用 Matplotlib 的样式上下文：
+提供两套参考图配色，按分组顺序使用：
+
+| 名称 | 四个分组的颜色 |
+| --- | --- |
+| `reference`（默认） | 珊瑚红 `#E64B35`、青蓝 `#4DBBD5`、青绿 `#00A087`、深蓝 `#3C5488` |
+| `reference_right` | 紫 `#7E2F8E`、蓝 `#238EBA`、青绿 `#00A087`、金黄 `#D99A00` |
+
+例如 `plot(data, colors="reference_right")` 切换第二套；`panel_colors` 可分别设置每个面板，未指定的面板采用默认配色。金星采用参考图的浅金色 `#F2CA69`，柱条、模型文字和中心细曲线使用同组颜色。
+
+字体跟随 `font.family`，背景跟随 `figure.facecolor`。设置 `colors="matplotlib"` 时，配色也跟随 Matplotlib 的 `axes.prop_cycle`：
 
 ```python
 import matplotlib.pyplot as plt
 from radialbundle import plot, save
 
 with plt.style.context("bmh"):
-    fig, ax = plot(data, highlight="Proposed")
+    fig, ax = plot(data, highlight="Proposed", colors="matplotlib")
     save(fig, "styled_figure")
 ```
 
@@ -130,7 +140,7 @@ style = Style(
 fig, ax = plot(
     data,
     style=style,
-    colors=["tab:blue", "tab:orange", "tab:green", "tab:red"],
+    colors=["#E64B35", "#4DBBD5", "#00A087", "#3C5488"],
     highlight="Proposed",
     highlight_label="本文方法",
     best_label="最优模型",
@@ -139,6 +149,10 @@ fig, ax = plot(
 ```
 
 中文优先使用 Microsoft YaHei，缺失时尝试 Noto Sans CJK 等字体；也可用 `Style(cjk_font="本机字体名")` 指定。传入 `ax` 可画到自己的 Matplotlib 子图中；返回的 `fig` 和 `ax` 可继续修改。绘图不会改写全局 `rcParams`。
+
+命令行可用 `--palette reference_right` 或 `--palette matplotlib` 切换配色。参考截图的灰底可用 `--background "#c8c8c8"`；并列图的灰底示例见下图。
+
+![参考图配色与灰底示例，数值为虚构数据](docs/images/two_panels_gray.png)
 
 `save(fig, "output/figure", formats=("pdf", "svg"), dpi=300)` 可选择导出格式；PDF 嵌入字体，SVG 保留可编辑文字。
 
